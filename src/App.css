@@ -1,0 +1,14 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink: #1B2430;
+  --color-paper: #F7F5F1;
+  --color-amber: #E8A33D;
+  --color-amber-dark: #C7852A;
+  --color-teal: #2F6F6B;
+  --color-teal-soft: #E4EFEE;
+  --color-rust: #C1502E;
+  --color-rust-soft: #F8E4DC;
+  --color-slate: #6B7280;
+  --color-line: #E7E3DB;
+}
