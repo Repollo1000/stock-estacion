@@ -8,9 +8,15 @@ function comoValorDeFiltro(valor: string): string {
   return `"${valor.replace(/\\/g, '\\\\').replace(/"/g, '\\"')}"`;
 }
 
+// "!inner" (en vez del embed por default, que hace LEFT JOIN) es necesario porque
+// findProductoByBarcode aplica un filtro .or() sobre este embed: sin !inner, PostgREST no
+// descarta las filas de stock_por_file cuyo producto no matchea el código, sino que las
+// devuelve igual con `producto: null` — lo cual rompe rowToProducto(). Con !inner, esas filas
+// se excluyen del todo. No afecta a los demás usos (getProductos, addProducto, adjustStock):
+// producto_id es NOT NULL, así que siempre hay match 1:1 y el INNER/LEFT da lo mismo.
 const STOCK_COLUMNS_EMBED = `
   id, category, stock, min_stock, updated_at,
-  producto:productos_catalogo ( barcode, case_barcode, units_per_case, name, variant )
+  producto:productos_catalogo!inner ( barcode, case_barcode, units_per_case, name, variant )
 `;
 
 interface CatalogoRow {
