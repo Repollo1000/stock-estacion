@@ -139,7 +139,7 @@ export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodig
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-surface rounded-xl shadow-soft p-4 sm:p-5 flex flex-col gap-3">
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-surface rounded-xl shadow-soft p-4 sm:p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
             <IconInbox className="w-5 h-5 text-brand" />
@@ -192,7 +192,7 @@ export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodig
 
         {scanner.escaneando && (
           <div className="rounded-lg overflow-hidden border border-line">
-            <video ref={scanner.videoRef} muted playsInline className="w-full bg-ink-deep" />
+            <video ref={scanner.videoRef} muted playsInline className="w-full max-h-[40vh] object-cover bg-ink-deep" />
             <p className="text-xs text-slate text-center py-2">
               {procesando ? 'Procesando...' : 'Apuntá al código de la caja o de la unidad'}
             </p>

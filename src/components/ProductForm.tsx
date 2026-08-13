@@ -167,7 +167,7 @@ export function ProductForm({ onAdd, initialBarcode }: ProductFormProps) {
 
       {scanner.escaneando && (
         <div className="rounded-lg overflow-hidden border border-line">
-          <video ref={scanner.videoRef} muted playsInline className="w-full bg-ink-deep" />
+          <video ref={scanner.videoRef} muted playsInline className="w-full max-h-[40vh] object-cover bg-ink-deep" />
           <p className="text-xs text-slate text-center py-2">
             Apuntá de cerca, con buena luz, y que el código llene el recuadro
             {campoEscaneando === 'caja' ? ' (código de caja)' : ' (código de unidad)'}
