@@ -109,18 +109,16 @@ export function Sidebar({
           >
             + Agregar producto
           </button>
-          {negocioActual.role === 'administrador' && (
-            <button
-              onClick={() => {
-                onSalidaClick();
-                onClose();
-              }}
-              className="flex items-center justify-center gap-2 bg-danger/15 text-danger hover:bg-danger/25 transition text-sm font-semibold rounded-lg py-2.5"
-            >
-              <IconOutbox className="w-4 h-4" />
-              - Sacar producto
-            </button>
-          )}
+          <button
+            onClick={() => {
+              onSalidaClick();
+              onClose();
+            }}
+            className="flex items-center justify-center gap-2 bg-danger/15 text-danger hover:bg-danger/25 transition text-sm font-semibold rounded-lg py-2.5"
+          >
+            <IconOutbox className="w-4 h-4" />
+            - Sacar producto
+          </button>
           <button
             onClick={() => {
               onRestockClick();
