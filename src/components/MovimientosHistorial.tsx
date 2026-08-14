@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { getMovimientos, type Movimiento } from '../lib/data';
+import { getMovimientos, type Movimiento, type MotivoMovimiento } from '../lib/data';
 import { IconClose, IconHistory } from './icons';
 
 interface MovimientosHistorialProps {
@@ -16,6 +16,18 @@ function formatearFecha(iso: string): string {
   });
 }
 
+const MOTIVO_LABEL: Record<MotivoMovimiento, string> = {
+  venta: 'Venta',
+  reposicion: 'Reposición',
+  ajuste: 'Ajuste',
+};
+
+const MOTIVO_CLASSES: Record<MotivoMovimiento, string> = {
+  venta: 'bg-danger-soft text-danger',
+  reposicion: 'bg-success-soft text-success',
+  ajuste: 'bg-cloud text-slate',
+};
+
 export function MovimientosHistorial({ fileId, onClose }: MovimientosHistorialProps) {
   const [movimientos, setMovimientos] = useState<Movimiento[]>([]);
   const [cargando, setCargando] = useState(true);
@@ -27,6 +39,10 @@ export function MovimientosHistorial({ fileId, onClose }: MovimientosHistorialPr
       .catch((err) => setError(err instanceof Error ? err.message : 'No se pudo cargar el historial.'))
       .finally(() => setCargando(false));
   }, [fileId]);
+
+  const totalVendido = movimientos
+    .filter((m) => m.motivo === 'venta')
+    .reduce((suma, m) => suma + Math.abs(m.delta), 0);
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center p-4">
@@ -49,6 +65,12 @@ export function MovimientosHistorial({ fileId, onClose }: MovimientosHistorialPr
         )}
 
         {movimientos.length > 0 && (
+          <p className="text-xs text-slate -mt-1">
+            Vendido (últimos {movimientos.length} movimientos): <span className="font-semibold text-ink">{totalVendido}</span> unidades
+          </p>
+        )}
+
+        {movimientos.length > 0 && (
           <div className="flex flex-col gap-1.5 overflow-y-auto">
             {movimientos.map((m) => (
               <div
@@ -56,7 +78,12 @@ export function MovimientosHistorial({ fileId, onClose }: MovimientosHistorialPr
                 className="flex items-center justify-between gap-3 px-3 py-2 rounded-lg border border-line text-sm"
               >
                 <div className="min-w-0">
-                  <div className="font-medium text-ink truncate">{m.productoNombre}</div>
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-medium text-ink truncate">{m.productoNombre}</span>
+                    <span className={`shrink-0 text-[10px] font-semibold uppercase tracking-wide px-1.5 py-0.5 rounded ${MOTIVO_CLASSES[m.motivo]}`}>
+                      {MOTIVO_LABEL[m.motivo]}
+                    </span>
+                  </div>
                   <div className="text-xs text-slate">
                     {m.usuarioNombre} · {formatearFecha(m.createdAt)}
                   </div>

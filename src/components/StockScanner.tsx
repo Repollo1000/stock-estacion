@@ -70,7 +70,7 @@ export function StockScanner({ modo, fileId, onClose, onProductoActualizado, onC
       const encontrado = await findProductoByBarcode(fileId, codigo);
       if (encontrado) {
         const delta = modo === 'entrada' ? encontrado.unidades : -encontrado.unidades;
-        const actualizado = await adjustStock(encontrado.producto.id, delta);
+        const actualizado = await adjustStock(encontrado.producto.id, delta, modo === 'entrada' ? 'reposicion' : 'venta');
         onProductoActualizado(actualizado);
         setHistorial((actuales) => [
           {

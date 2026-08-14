@@ -132,9 +132,15 @@ export async function addProducto(nuevo: NuevoProducto): Promise<Producto> {
   return rowToProducto(data as unknown as StockRow);
 }
 
-export async function adjustStock(stockId: string, delta: number): Promise<Producto> {
+export type MotivoMovimiento = 'venta' | 'ajuste' | 'reposicion';
+
+export async function adjustStock(
+  stockId: string,
+  delta: number,
+  motivo: MotivoMovimiento = 'ajuste'
+): Promise<Producto> {
   const { data, error } = await supabase
-    .rpc('ajustar_stock', { p_stock_id: stockId, p_delta: delta })
+    .rpc('ajustar_stock', { p_stock_id: stockId, p_delta: delta, p_motivo: motivo })
     .select(STOCK_COLUMNS_EMBED)
     .single();
 
@@ -208,6 +214,7 @@ export interface Movimiento {
   usuarioNombre: string;
   delta: number;
   stockResultante: number;
+  motivo: MotivoMovimiento;
   createdAt: string;
 }
 
@@ -215,6 +222,7 @@ interface MovimientoEmbebido {
   id: string;
   delta: number;
   stock_resultante: number;
+  motivo: MotivoMovimiento;
   created_at: string;
   usuario: { display_name: string } | null;
 }
@@ -231,7 +239,7 @@ export async function getMovimientos(fileId: string, limite = 100): Promise<Movi
     .from('stock_por_file')
     .select(`
       producto:productos_catalogo ( name ),
-      movimientos:movimientos_stock ( id, delta, stock_resultante, created_at, usuario:perfiles ( display_name ) )
+      movimientos:movimientos_stock ( id, delta, stock_resultante, motivo, created_at, usuario:perfiles ( display_name ) )
     `)
     .eq('file_id', fileId);
 
@@ -245,6 +253,7 @@ export async function getMovimientos(fileId: string, limite = 100): Promise<Movi
       usuarioNombre: m.usuario?.display_name ?? '—',
       delta: m.delta,
       stockResultante: m.stock_resultante,
+      motivo: m.motivo,
       createdAt: m.created_at,
     }))
   );
