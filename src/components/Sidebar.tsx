@@ -1,5 +1,5 @@
 import type { Categoria, Usuario, Negocio, FileEstacion } from '../types';
-import { IconClose, IconTag, IconBox, IconPercent, IconSwitch, IconLogout, IconInbox, IconHistory } from './icons';
+import { IconClose, IconTag, IconBox, IconPercent, IconSwitch, IconLogout, IconInbox, IconOutbox, IconHistory } from './icons';
 
 interface SidebarProps {
   isOpen: boolean;
@@ -8,18 +8,20 @@ interface SidebarProps {
   onSelectCategoria: (cat: Categoria) => void;
   onAddClick: () => void;
   onRestockClick: () => void;
+  onSalidaClick: () => void;
   onHistorialClick: () => void;
   usuario: Usuario;
   negocioActual: Negocio;
   fileActual: FileEstacion;
+  puedeCambiarNegocio: boolean;
   onChangeFile: () => void;
   onChangeNegocio: () => void;
   onLogout: () => void;
 }
 
 const CATEGORIAS: { key: Categoria; label: string; icon: typeof IconTag }[] = [
-  { key: 'ropa', label: 'Ropa', icon: IconTag },
   { key: 'productos', label: 'Productos', icon: IconBox },
+  { key: 'ropa', label: 'Ropa', icon: IconTag },
   { key: 'promociones', label: 'Promociones', icon: IconPercent },
 ];
 
@@ -30,10 +32,12 @@ export function Sidebar({
   onSelectCategoria,
   onAddClick,
   onRestockClick,
+  onSalidaClick,
   onHistorialClick,
   usuario,
   negocioActual,
   fileActual,
+  puedeCambiarNegocio,
   onChangeFile,
   onChangeNegocio,
   onLogout,
@@ -105,6 +109,16 @@ export function Sidebar({
           >
             + Agregar producto
           </button>
+                    <button
+            onClick={() => {
+              onSalidaClick();
+              onClose();
+            }}
+            className="flex items-center justify-center gap-2 bg-danger/15 text-danger hover:bg-danger/25 transition text-sm font-semibold rounded-lg py-2.5"
+          >
+            <IconOutbox className="w-4 h-4" />
+            - Sacar producto
+          </button>
           <button
             onClick={() => {
               onRestockClick();
@@ -115,6 +129,7 @@ export function Sidebar({
             <IconInbox className="w-4 h-4" />
             Reponer stock
           </button>
+
           {negocioActual.role === 'administrador' && (
             <button
               onClick={() => {
@@ -143,13 +158,15 @@ export function Sidebar({
             <IconSwitch className="w-4 h-4 shrink-0" />
             Cambiar de file
           </button>
-          <button
-            onClick={onChangeNegocio}
-            className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-white/60 hover:bg-white/5 hover:text-white transition"
-          >
-            <IconSwitch className="w-4 h-4 shrink-0" />
-            Cambiar de negocio
-          </button>
+          {puedeCambiarNegocio && (
+            <button
+              onClick={onChangeNegocio}
+              className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-white/60 hover:bg-white/5 hover:text-white transition"
+            >
+              <IconSwitch className="w-4 h-4 shrink-0" />
+              Cambiar de negocio
+            </button>
+          )}
           <button
             onClick={onLogout}
             className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-white/60 hover:bg-white/5 hover:text-white transition"

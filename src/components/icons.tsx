@@ -163,6 +163,16 @@ export function IconSwitch(props: SVGProps<SVGSVGElement>) {
   );
 }
 
+export function IconOutbox(props: SVGProps<SVGSVGElement>) {
+  return (
+    <Icon {...props}>
+      <polyline points="3,13 3,19 21,19 21,13" />
+      <line x1="12" y1="14" x2="12" y2="3" />
+      <polyline points="7,8 12,3 17,8" />
+    </Icon>
+  );
+}
+
 export function IconHistory(props: SVGProps<SVGSVGElement>) {
   return (
     <Icon {...props}>

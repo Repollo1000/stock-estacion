@@ -2,13 +2,17 @@ import { useRef, useState } from 'react';
 import type { Categoria, Producto } from '../types';
 import { findProductoByBarcode, findCatalogoByBarcode, addProducto, adjustStock, type CatalogoEntry } from '../lib/data';
 import { useBarcodeScanner } from '../hooks/useBarcodeScanner';
-import { IconCamera, IconClose, IconInbox } from './icons';
+import { IconCamera, IconClose, IconInbox, IconOutbox } from './icons';
 
-interface RestockScannerProps {
+type Modo = 'entrada' | 'salida';
+
+interface StockScannerProps {
+  modo: Modo;
   fileId: string;
   onClose: () => void;
   onProductoActualizado: (producto: Producto) => void;
-  onCodigoNoEncontrado: (codigo: string) => void;
+  // Solo aplica al modo 'entrada': no tiene sentido "crear un producto nuevo" al sacar stock.
+  onCodigoNoEncontrado?: (codigo: string) => void;
 }
 
 interface Entrada {
@@ -20,12 +24,31 @@ interface Entrada {
 // Evita contar dos veces el mismo código si sigue en cuadro en el próximo frame.
 const COOLDOWN_MS = 2500;
 
-export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodigoNoEncontrado }: RestockScannerProps) {
+const TEXTOS: Record<Modo, { titulo: string; icono: typeof IconInbox; descripcion: string; botonEscanear: string }> = {
+  entrada: {
+    titulo: 'Reponer stock',
+    icono: IconInbox,
+    descripcion:
+      'Escaneá el código de la caja (suma todas las unidades de golpe) o de una unidad suelta (suma 1). Podés seguir escaneando cajas una tras otra sin cerrar esto.',
+    botonEscanear: 'Empezar a escanear',
+  },
+  salida: {
+    titulo: 'Sacar producto',
+    icono: IconOutbox,
+    descripcion:
+      'Escaneá el código de la caja (resta todas las unidades de golpe) o de una unidad suelta (resta 1, lo normal en una venta). Podés seguir escaneando sin cerrar esto.',
+    botonEscanear: 'Empezar a escanear',
+  },
+};
+
+export function StockScanner({ modo, fileId, onClose, onProductoActualizado, onCodigoNoEncontrado }: StockScannerProps) {
+  const textos = TEXTOS[modo];
   const [historial, setHistorial] = useState<Entrada[]>([]);
   const [procesando, setProcesando] = useState(false);
   const [noEncontrado, setNoEncontrado] = useState<string | null>(null);
 
   // Código ya existe en el catálogo (de OTRO file) pero no está cargado en este file todavía.
+  // Solo aplica en modo 'entrada'.
   const [enCatalogo, setEnCatalogo] = useState<CatalogoEntry | null>(null);
   const [categoriaNueva, setCategoriaNueva] = useState<Categoria>('ropa');
   const [stockInicial, setStockInicial] = useState(0);
@@ -46,16 +69,24 @@ export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodig
     try {
       const encontrado = await findProductoByBarcode(fileId, codigo);
       if (encontrado) {
-        const actualizado = await adjustStock(encontrado.producto.id, encontrado.unidades);
+        const delta = modo === 'entrada' ? encontrado.unidades : -encontrado.unidades;
+        const actualizado = await adjustStock(encontrado.producto.id, delta);
         onProductoActualizado(actualizado);
         setHistorial((actuales) => [
           {
             id: `${codigo}-${ahora}`,
-            texto: `+${encontrado.unidades} · ${actualizado.name} · nuevo stock: ${actualizado.stock}`,
+            texto: `${modo === 'entrada' ? '+' : '-'}${encontrado.unidades} · ${actualizado.name} · nuevo stock: ${actualizado.stock}`,
             ok: true,
           },
           ...actuales,
         ].slice(0, 8));
+        return;
+      }
+
+      if (modo === 'salida') {
+        // No tiene sentido "agregar como producto nuevo" al sacar stock: si no está en este file, no hay nada que restar.
+        scanner.detenerEscaneo();
+        setNoEncontrado(codigo);
         return;
       }
 
@@ -83,7 +114,7 @@ export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodig
   const scanner = useBarcodeScanner(handleDecode);
 
   function handleAgregarNuevo() {
-    if (!noEncontrado) return;
+    if (!noEncontrado || !onCodigoNoEncontrado) return;
     scanner.detenerEscaneo();
     onCodigoNoEncontrado(noEncontrado);
   }
@@ -142,8 +173,8 @@ export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodig
       <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-surface rounded-xl shadow-soft p-4 sm:p-5 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2">
-            <IconInbox className="w-5 h-5 text-brand" />
-            <h2 className="font-semibold text-ink">Reponer stock</h2>
+            <textos.icono className="w-5 h-5 text-brand" />
+            <h2 className="font-semibold text-ink">{textos.titulo}</h2>
           </div>
           <button
             onClick={() => {
@@ -157,10 +188,7 @@ export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodig
           </button>
         </div>
 
-        <p className="text-xs text-slate">
-          Escaneá el código de la caja (suma todas las unidades de golpe) o de una unidad suelta (suma 1). Podés
-          seguir escaneando cajas una tras otra sin cerrar esto.
-        </p>
+        <p className="text-xs text-slate">{textos.descripcion}</p>
 
         <form onSubmit={handleBuscarManual} className="flex gap-2">
           <input
@@ -186,7 +214,7 @@ export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodig
             className="flex items-center justify-center gap-2 px-4 py-3 rounded-lg text-sm font-semibold text-white bg-brand hover:bg-brand-dark transition"
           >
             <IconCamera className="w-4 h-4" />
-            Empezar a escanear
+            {textos.botonEscanear}
           </button>
         )}
 
@@ -250,18 +278,25 @@ export function RestockScanner({ fileId, onClose, onProductoActualizado, onCodig
         {noEncontrado && (
           <div className="rounded-lg border border-dashed border-line p-3 flex flex-col gap-2">
             <p className="text-sm text-ink">
-              El código <span className="font-mono">{noEncontrado}</span> no está registrado en ningún producto.
+              El código <span className="font-mono">{noEncontrado}</span>{' '}
+              {modo === 'entrada'
+                ? 'no está registrado en ningún producto.'
+                : 'no está cargado en este file, así que no hay nada que sacar.'}
             </p>
             <div className="flex gap-2">
-              <button
-                onClick={handleAgregarNuevo}
-                className="flex-1 px-3 py-2 rounded-lg text-sm font-semibold text-white bg-brand hover:bg-brand-dark transition"
-              >
-                Agregar como producto nuevo
-              </button>
+              {modo === 'entrada' && (
+                <button
+                  onClick={handleAgregarNuevo}
+                  className="flex-1 px-3 py-2 rounded-lg text-sm font-semibold text-white bg-brand hover:bg-brand-dark transition"
+                >
+                  Agregar como producto nuevo
+                </button>
+              )}
               <button
                 onClick={handleSeguirEscaneando}
-                className="px-3 py-2 rounded-lg text-sm font-semibold text-slate border border-line hover:bg-cloud transition"
+                className={`px-3 py-2 rounded-lg text-sm font-semibold border border-line hover:bg-cloud transition ${
+                  modo === 'entrada' ? 'text-slate' : 'flex-1 text-white bg-brand hover:bg-brand-dark border-transparent'
+                }`}
               >
                 Seguir escaneando
               </button>

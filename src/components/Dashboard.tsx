@@ -8,7 +8,7 @@ import { StatsCards } from './StatsCards';
 import { ProductTable } from './ProductTable';
 import { ProductCard } from './ProductCard';
 import { ProductForm } from './ProductForm';
-import { RestockScanner } from './RestockScanner';
+import { StockScanner } from './StockScanner';
 import { MovimientosHistorial } from './MovimientosHistorial';
 import { IconMenu, IconSearch, IconInbox } from './icons';
 
@@ -16,6 +16,7 @@ interface DashboardProps {
   usuario: Usuario;
   negocioActual: Negocio;
   fileActual: FileEstacion;
+  puedeCambiarNegocio: boolean;
   onChangeFile: () => void;
   onChangeNegocio: () => void;
   onLogout: () => void;
@@ -30,16 +31,17 @@ const FILTRO_ACTIVE_CLASSES = {
   sinStock: 'bg-danger text-white',
 };
 
-export function Dashboard({ usuario, negocioActual, fileActual, onChangeFile, onChangeNegocio, onLogout }: DashboardProps) {
+export function Dashboard({ usuario, negocioActual, fileActual, puedeCambiarNegocio, onChangeFile, onChangeNegocio, onLogout }: DashboardProps) {
   const [productos, setProductos] = useState<Producto[]>([]);
   const [cargando, setCargando] = useState(true);
   const [error, setError] = useState('');
-  const [categoriaActiva, setCategoriaActiva] = useState<Categoria>('ropa');
+  const [categoriaActiva, setCategoriaActiva] = useState<Categoria>('productos');
   const [busqueda, setBusqueda] = useState('');
   const [filtroEstado, setFiltroEstado] = useState<'todos' | 'enStock' | 'stockBajo' | 'sinStock'>('todos');
   const [mostrarForm, setMostrarForm] = useState(false);
   const [barcodePrefill, setBarcodePrefill] = useState<string | undefined>(undefined);
   const [mostrarRestock, setMostrarRestock] = useState(false);
+  const [mostrarSalida, setMostrarSalida] = useState(false);
   const [mostrarHistorial, setMostrarHistorial] = useState(false);
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
@@ -133,21 +135,33 @@ export function Dashboard({ usuario, negocioActual, fileActual, onChangeFile, on
         onSelectCategoria={setCategoriaActiva}
         onAddClick={handleAbrirFormNuevo}
         onRestockClick={() => setMostrarRestock(true)}
+        onSalidaClick={() => setMostrarSalida(true)}
         onHistorialClick={() => setMostrarHistorial(true)}
         usuario={usuario}
         negocioActual={negocioActual}
         fileActual={fileActual}
+        puedeCambiarNegocio={puedeCambiarNegocio}
         onChangeFile={onChangeFile}
         onChangeNegocio={onChangeNegocio}
         onLogout={onLogout}
       />
 
       {mostrarRestock && (
-        <RestockScanner
+        <StockScanner
+          modo="entrada"
           fileId={fileActual.id}
           onClose={() => setMostrarRestock(false)}
           onProductoActualizado={handleProductoActualizadoPorReposicion}
           onCodigoNoEncontrado={handleCodigoNoEncontradoEnReposicion}
+        />
+      )}
+
+      {mostrarSalida && (
+        <StockScanner
+          modo="salida"
+          fileId={fileActual.id}
+          onClose={() => setMostrarSalida(false)}
+          onProductoActualizado={handleProductoActualizadoPorReposicion}
         />
       )}
 

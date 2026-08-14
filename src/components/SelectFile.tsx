@@ -6,12 +6,13 @@ import { IconLogout, IconSwitch } from './icons';
 interface SelectFileProps {
   usuario: Usuario;
   negocioActual: Negocio;
+  puedeCambiarNegocio: boolean;
   onSelectFile: (file: FileEstacion) => void;
   onChangeNegocio: () => void;
   onLogout: () => void;
 }
 
-export function SelectFile({ usuario, negocioActual, onSelectFile, onChangeNegocio, onLogout }: SelectFileProps) {
+export function SelectFile({ usuario, negocioActual, puedeCambiarNegocio, onSelectFile, onChangeNegocio, onLogout }: SelectFileProps) {
   const [files, setFiles] = useState<FileEstacion[]>([]);
   const [cargando, setCargando] = useState(true);
   const [showForm, setShowForm] = useState(false);
@@ -56,13 +57,15 @@ export function SelectFile({ usuario, negocioActual, onSelectFile, onChangeNegoc
             </p>
           </div>
           <div className="flex items-center gap-3 shrink-0">
-            <button
-              onClick={onChangeNegocio}
-              className="flex items-center gap-1.5 text-sm font-semibold text-slate hover:text-brand transition"
-            >
-              <IconSwitch className="w-4 h-4" />
-              Cambiar negocio
-            </button>
+            {puedeCambiarNegocio && (
+              <button
+                onClick={onChangeNegocio}
+                className="flex items-center gap-1.5 text-sm font-semibold text-slate hover:text-brand transition"
+              >
+                <IconSwitch className="w-4 h-4" />
+                Cambiar negocio
+              </button>
+            )}
             <button
               onClick={onLogout}
               className="flex items-center gap-1.5 text-sm font-semibold text-slate hover:text-danger transition"

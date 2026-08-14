@@ -17,6 +17,7 @@ function App() {
   const [usuario, setUsuario] = useState<Usuario | null>(null);
   const [negocioActual, setNegocioActual] = useState<Negocio | null>(null);
   const [fileActual, setFileActual] = useState<FileEstacion | null>(null);
+  const [cantidadNegocios, setCantidadNegocios] = useState(1);
 
   useEffect(() => {
     getUsuarioActual().then((u) => {
@@ -47,6 +48,7 @@ function App() {
   async function entrarASeleccionDeNegocio() {
     try {
       const negocios = await getMisNegocios();
+      setCantidadNegocios(negocios.length);
       if (negocios.length === 1) {
         setNegocioActual(negocios[0]);
         setPantalla('selectFile');
@@ -125,6 +127,7 @@ function App() {
       <SelectFile
         usuario={usuario}
         negocioActual={negocioActual}
+        puedeCambiarNegocio={cantidadNegocios > 1}
         onSelectFile={handleSelectFile}
         onChangeNegocio={handleChangeNegocio}
         onLogout={handleLogout}
@@ -137,6 +140,7 @@ function App() {
       usuario={usuario}
       negocioActual={negocioActual}
       fileActual={fileActual}
+      puedeCambiarNegocio={cantidadNegocios > 1}
       onChangeFile={handleChangeFile}
       onChangeNegocio={handleChangeNegocio}
       onLogout={handleLogout}
